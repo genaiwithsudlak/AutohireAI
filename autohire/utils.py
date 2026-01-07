@@ -1,8 +1,9 @@
-import os
 import requests
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 from fpdf import FPDF
+import docx
+import os
 
 def extract_text_from_pdf(pdf_path):
     try:
@@ -32,6 +33,41 @@ def extract_text_from_url(url):
         return text
     except Exception as e:
         return f"Error reading URL: {str(e)}"
+
+def extract_text_from_docx(docx_path):
+    try:
+        doc = docx.Document(docx_path)
+        text = []
+        for para in doc.paragraphs:
+            text.append(para.text)
+        return '\n'.join(text)
+    except Exception as e:
+        return f"Error reading DOCX: {str(e)}"
+
+def extract_text_from_txt(txt_path):
+    try:
+        with open(txt_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        try:
+            with open(txt_path, 'r', encoding='latin-1') as f:
+                 return f.read()
+        except Exception as e:
+            return f"Error reading TXT: {str(e)}"
+
+def extract_text(ident):
+    if ident.startswith("http"):
+        return extract_text_from_url(ident)
+    
+    ext = os.path.splitext(ident)[1].lower()
+    if ext == '.pdf':
+        return extract_text_from_pdf(ident)
+    elif ext == '.docx':
+        return extract_text_from_docx(ident)
+    elif ext == '.txt':
+        return extract_text_from_txt(ident)
+    else:
+        return extract_text_from_txt(ident) # fallback
 
 def create_pdf_from_text(text, output_path):
     try:

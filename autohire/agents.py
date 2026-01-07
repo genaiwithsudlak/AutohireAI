@@ -2,10 +2,10 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 
-# Initialize LLM
-llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+# Initialize LLM removed
 
-def analyze_resume_and_jd(resume_text, jd_text):
+
+def analyze_resume_and_jd(resume_text, jd_text, llm):
     prompt = ChatPromptTemplate.from_template(
         """
         You are an expert ATS (Applicant Tracking System) Optimization Specialist and Recruiter.
@@ -28,7 +28,7 @@ def analyze_resume_and_jd(resume_text, jd_text):
     chain = prompt | llm | StrOutputParser()
     return chain.invoke({"resume": resume_text, "jd": jd_text})
 
-def humanize_text(text, type="resume"):
+def humanize_text(text, llm, type="resume"):
     if type == "resume":
         instructions = """
         **Refinement Goals:**
@@ -74,7 +74,7 @@ def humanize_text(text, type="resume"):
     chain = prompt | llm | StrOutputParser()
     return chain.invoke({"text": text, "instructions": instructions})
 
-def generate_tailored_resume(resume_text, jd_text, analysis):
+def generate_tailored_resume(resume_text, jd_text, analysis, llm):
     # Step 1: Draft with Content Focus
     draft_prompt = ChatPromptTemplate.from_template(
         """
@@ -102,9 +102,9 @@ def generate_tailored_resume(resume_text, jd_text, analysis):
     draft = draft_chain.invoke({"resume": resume_text, "jd": jd_text, "analysis": analysis})
     
     # Step 2: Humanize
-    return humanize_text(draft, type="resume")
+    return humanize_text(draft, llm, type="resume")
 
-def generate_cover_letter(resume_text, jd_text):
+def generate_cover_letter(resume_text, jd_text, llm):
     # Step 1: Draft
     draft_prompt = ChatPromptTemplate.from_template(
         """
@@ -123,4 +123,4 @@ def generate_cover_letter(resume_text, jd_text):
     draft = draft_chain.invoke({"resume": resume_text, "jd": jd_text})
     
     # Step 2: Humanize
-    return humanize_text(draft, type="cover_letter")
+    return humanize_text(draft, llm, type="cover_letter")

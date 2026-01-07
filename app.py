@@ -1,13 +1,18 @@
 import chainlit as cl
 import os
 from dotenv import load_dotenv
-from src.utils import extract_text_from_pdf, extract_text_from_url, create_pdf_from_text
-from src.agents import analyze_resume_and_jd, generate_tailored_resume, generate_cover_letter
+from autohire.utils import extract_text_from_pdf, extract_text_from_url, create_pdf_from_text
+from autohire.agents import analyze_resume_and_jd, generate_tailored_resume, generate_cover_letter
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
 @cl.on_chat_start
 async def start():
+    # Initialize LLM for this session
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
+    cl.user_session.set("llm", llm)
+
     files = None
     
     # Wait for the user to upload a resume
@@ -59,7 +64,8 @@ async def main(message: cl.Message):
     msg = cl.Message(content="Analyzing Resume and JD...")
     await msg.send()
     
-    analysis = analyze_resume_and_jd(resume_text, jd_text)
+    llm = cl.user_session.get("llm")
+    analysis = analyze_resume_and_jd(resume_text, jd_text, llm)
     
     await cl.Message(content=f"**Analysis Result:**\n\n{analysis}").send()
     
@@ -67,7 +73,7 @@ async def main(message: cl.Message):
     msg = cl.Message(content="Generating Tailored Resume...")
     await msg.send()
     
-    tailored_resume = generate_tailored_resume(resume_text, jd_text, analysis)
+    tailored_resume = generate_tailored_resume(resume_text, jd_text, analysis, llm)
     
     await cl.Message(content=f"**Tailored Resume:**\n\n{tailored_resume}").send()
     
@@ -75,7 +81,7 @@ async def main(message: cl.Message):
     msg = cl.Message(content="Generating Cover Letter...")
     await msg.send()
     
-    cover_letter = generate_cover_letter(resume_text, jd_text)
+    cover_letter = generate_cover_letter(resume_text, jd_text, llm)
     
     await cl.Message(content=f"**Cover Letter:**\n\n{cover_letter}").send()
     
